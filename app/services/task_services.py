@@ -57,13 +57,13 @@ def update_task(id : int, updated_task_data: TaskCreate):
     for index,t in enumerate(tasks_db):
         if t.id == id:
             updated_task = Task(
-                id=id,
-                title=updated_task_data.title,
-                description=updated_task_data.description,
-                status=updated_task_data.status,
-                priority=updated_task_data.priority,
-                tags=updated_task_data.tags,
-                created_at=t.created_at  
+                id = id,
+                title = updated_task_data.title,
+                description = updated_task_data.description,
+                status = updated_task_data.status,
+                priority = updated_task_data.priority,
+                tags = updated_task_data.tags,
+                created_at = t.created_at  
             )
             tasks_db[index] = updated_task
             return updated_task

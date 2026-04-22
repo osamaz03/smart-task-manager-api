@@ -91,5 +91,3 @@ All tests pass (covers create/list/validation/get/404).
 ## Dependencies
 
 See `pyproject.toml` / `uv.lock`. Key: FastAPI, Pydantic, Jinja2, pytest.
-
-
