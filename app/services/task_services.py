@@ -24,7 +24,7 @@ def filter_task(status = None , priority = None , tags = None , search = None):
 
     return result
 
-def creat_task(task_data: TaskCreate) -> Task:
+def create_task(task_data: TaskCreate) -> Task:
     global current_id
 
     task = Task(

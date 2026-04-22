@@ -16,7 +16,7 @@ async def home(request : Request):
 
 @router.post("/tasks",status_code=status.HTTP_201_CREATED)
 async def create_task(task : TaskCreate):
-    return task_services.creat_task(task)
+    return task_services.create_task(task)
     
 
 @router.get("/tasks",status_code=status.HTTP_200_OK)

@@ -34,7 +34,6 @@ Uses in-memory storage (no database), Pydantic validation, Jinja2 templating, an
 ├── pyproject.toml           # Dependencies (uv/FastAPI/Pydantic/etc.)
 ├── uv.lock                  # Lockfile
 ├── README.md                # This file
-└── TODO.md                  # Task progress tracker (added by BLACKBOXAI)
 ```
 
 ## Setup & Installation
@@ -84,7 +83,6 @@ All tests pass (covers create/list/validation/get/404).
 ## Notes / Improvements
 
 - **In-memory only**: Data lost on restart. Add SQLAlchemy + DB (SQLite/Postgres) for persistence.
-- Typos in code (e.g., `creat_task`): Not fixed per task scope (comments only).
 - Tags filter: Exact list match; improve to any tag intersection.
 - Filtering chain: Sequential (order matters); consider more advanced queries.
 - No auth/rate limiting.
