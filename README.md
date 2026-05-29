@@ -1,93 +1,170 @@
 # Task Management API
 
-A simple, fast FastAPI-based task management application with CRUD operations, filtering, search, and HTML frontend.
+A FastAPI-based task management application with a simple HTML frontend and SQLite database persistence.
 
-Uses in-memory storage (no database), Pydantic validation, Jinja2 templating, and pytest for tests. Managed with uv/pyproject.toml.
+The app supports creating, listing, updating, and deleting tasks, plus filtering by status and priority and searching by title or description. Data is stored in `task.db` using SQLAlchemy.
 
 ## Features
 
-- Create, read, update, delete tasks (CRUD)
-- Filter tasks by status (`todo`, `in_progress`, `done`), priority (`low`, `medium`, `high`), tags (exact list match)
-- Search tasks by substring in title/description (case-insensitive)
-- Automatic ID and timestamp generation
-- Input validation with Pydantic (Literal enums for status/priority)
-- HTML frontend at `/` (index.html)
-- API documentation auto-generated at `/docs` (Swagger) or `/redoc`
-- Comprehensive unit tests
+- FastAPI REST API for task CRUD operations
+- SQLite database with SQLAlchemy ORM
+- Jinja2-rendered frontend at `/`
+- Filter tasks by `status` and `priority`
+- Search tasks by title or description
+- Pydantic request/response validation
+- Automatic table creation on app startup
+- Pytest coverage for core API behavior
+
+## Tech Stack
+
+- FastAPI
+- SQLAlchemy
+- SQLite
+- Pydantic
+- Jinja2
+- pytest
+- uv / `pyproject.toml`
 
 ## Project Structure
 
-```
+```text
 .
 ├── app/
-│   ├── main.py              # FastAPI app setup and routers
-│   ├── models.py            # Pydantic Task/TaskCreate models
+│   ├── database/
+│   │   └── todo_database.py      # SQLAlchemy engine, session, base, DB dependency
+│   ├── models/
+│   │   └── task_models.py        # SQLAlchemy Task model
 │   ├── routes/
-│   │   └── tasks.py         # API endpoints (CRUD, filter)
+│   │   └── tasks.py              # API routes and frontend route
+│   ├── schemas/
+│   │   └── task_shemas.py        # Pydantic schemas for create/update/response
 │   ├── services/
-│   │   └── task_services.py # Business logic (in-memory CRUD/filter)
-│   └── templates/
-│       └── index.html       # Frontend HTML template
-├── static/                  # CSS/JS/assets (mounted at /static)
+│   │   └── task_services.py      # Database CRUD and filtering logic
+│   ├── templates/
+│   │   └── index.html            # HTML frontend
+│   └── main.py                   # FastAPI app entrypoint
+├── static/                       # Static files mounted at /static
 ├── tests/
-│   └── test_tasks.py        # Pytest API tests
-├── pyproject.toml           # Dependencies (uv/FastAPI/Pydantic/etc.)
-├── uv.lock                  # Lockfile
-├── README.md                # This file
+│   └── test_tasks.py             # API tests
+├── seed.py                       # Optional script to insert sample tasks
+├── task.db                       # SQLite database file
+├── pyproject.toml                # Project dependencies and pytest config
+├── uv.lock                       # Lockfile
+└── README.md
 ```
 
-## Setup & Installation
+## Setup
 
-1. Ensure [uv](https://astral.sh/uv) is installed (`pipx install uv` or brew).
+1. Install [uv](https://astral.sh/uv/) if you do not already have it.
 2. Install dependencies:
-   ```
-   uv sync
-   ```
-3. Run the development server:
-   ```
-   uvicorn app.main:app --reload --port 8000
-   ```
-4. Open http://localhost:8000 in browser.
-   - Frontend: http://localhost:8000/
-   - API Docs: http://localhost:8000/docs
-   - Redoc: http://localhost:8000/redoc
+
+```bash
+uv sync
+```
+
+3. Start the development server:
+
+```bash
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+4. Open the app in your browser:
+
+- Frontend: `http://localhost:8000/`
+- Swagger docs: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+## Database
+
+- The app uses SQLite with database file `task.db`
+- Tables are created automatically on startup with:
+
+```python
+BASE.metadata.create_all(bind=engine)
+```
+
+- Database connection setup lives in `app/database/todo_database.py`
+
+## Seed Sample Data
+
+To insert a couple of example tasks into the database:
+
+```bash
+uv run python seed.py
+```
 
 ## API Endpoints
 
-| Method | Endpoint     | Description                  | Params/Query                  | Response          |
-|--------|--------------|------------------------------|-------------------------------|-------------------|
-| GET    | `/`          | Render HTML frontend        | -                             | HTML page         |
-| POST   | `/tasks`     | Create task                 | Body: TaskCreate              | 201 Task          |
-| GET    | `/tasks`     | List/filter tasks           | ?status=?&priority=?&tags=?&search=? | 200 [Task] |
-| GET    | `/tasks/{id}`| Get task by ID              | path id (int)                 | 200 Task or 404   |
-| PUT    | `/tasks/{id}`| Update task                 | path id, Body: TaskCreate     | 200 Task          |
-| DELETE | `/tasks/{id}`| Delete task by ID           | path id                       | 200 (no content)  |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/` | Render the HTML frontend |
+| `POST` | `/tasks` | Create a new task |
+| `GET` | `/tasks` | List tasks with optional filters |
+| `GET` | `/tasks/{task_id}` | Get one task by ID |
+| `PUT` | `/tasks/{task_id}` | Update a task |
+| `DELETE` | `/tasks/{task_id}` | Delete a task |
 
-**Task Fields:**
-- `id`: int (auto)
-- `title`: str (req)
-- `description`: str (req)
-- `status`: "todo" \| "in_progress" \| "done" (default "todo")
-- `priority`: "low" \| "medium" \| "high" (default "low")
-- `tags`: ["str"] (default [])
-- `created_at`: datetime (auto)
+## Query Parameters
+
+`GET /tasks` supports:
+
+- `status`: `todo`, `in_progress`, `done`
+- `priority`: `low`, `medium`, `high`
+- `search`: substring match against title or description
+
+Example:
+
+```text
+/tasks?status=todo&priority=high&search=homework
+```
+
+## Task Fields
+
+### Create task
+
+```json
+{
+  "title": "Finish homework",
+  "description": "Math exercises for tomorrow",
+  "status": "todo",
+  "priority": "high",
+  "tags": ["school"]
+}
+```
+
+### Response task
+
+```json
+{
+  "id": 1,
+  "title": "Finish homework",
+  "description": "Math exercises for tomorrow",
+  "status": "todo",
+  "priority": "high",
+  "tags": ["school"],
+  "created_at": "2026-05-29T10:00:00Z",
+  "updated_at": "2026-05-29T10:00:00Z"
+}
+```
 
 ## Testing
 
-Run tests:
+Run the test suite with:
+
+```bash
+uv run pytest
 ```
-pytest
-```
-All tests pass (covers create/list/validation/get/404).
 
-## Notes / Improvements
+The current tests cover:
 
-- **In-memory only**: Data lost on restart. Add SQLAlchemy + DB (SQLite/Postgres) for persistence.
-- Tags filter: Exact list match; improve to any tag intersection.
-- Filtering chain: Sequential (order matters); consider more advanced queries.
-- No auth/rate limiting.
-- Frontend: Basic index.html; enhance with JS for dynamic CRUD.
+- task creation
+- listing tasks
+- validation errors
+- fetching a task by ID
+- 404 handling for missing tasks
 
-## Dependencies
+## Notes
 
-See `pyproject.toml` / `uv.lock`. Key: FastAPI, Pydantic, Jinja2, pytest.
+- Task tags are stored in the database as a comma-separated string and converted back to a list in the service layer
+- The frontend currently supports creating, listing, filtering, searching, and deleting tasks
+- The project uses SQLite locally, so it is easy to run without extra setup
